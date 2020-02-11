@@ -5,8 +5,9 @@ use ansi_term::Style;
 use chrono::prelude::*;
 use chrono::{DateTime, Local, TimeZone, Utc};
 use select::document::Document;
-use select::predicate::{Attr, Name, Predicate};
+use select::predicate::{Attr, Class, Name, Predicate};
 use std::collections::HashMap;
+use std::env;
 use std::fs::File;
 use std::io::prelude::*; // read_to_string()
 use std::thread;
@@ -42,24 +43,24 @@ impl Default for StockInfo {
 }
 
 fn main() {
-    let str1 = "red";
-    println!("red {}", Red.paint(str1));
-    let yellow_string = Yellow.paint("yellow").to_string();
-    println!("yellow {}", yellow_string);
+    let mut target = String::from("카카오");
+    let args: Vec<String> = env::args().collect();
+    if args.len() > 1 {
+        target = args[1].to_uppercase().clone();
+        println!("target:{}", target);
+    }
+    let stock_info_map = load_stock_code_from_file(String::from("상장법인목록.xls"));
 
-    println!("bold {}", Cyan.bold().paint("bold style"));
-    println!(
-        "underline style {}",
-        Style::new()
-            .on(Purple)
-            .fg(Black)
-            .underline()
-            .paint("underline style")
-    );
-    println!("fixed {}", Fixed(127).paint("fixed test"));
+    match stock_info_map.get(&target) {
+        Some(stock_info) => {
+            println!("stock_info : {:?}", stock_info);
+            get_stock_price(&stock_info);
+        }
+        None => (),
+    }
+}
 
-    // load_stock_code_from_file(String::from("상장법인목록.xls"));
-
+fn get_stock_price(stock_info: &StockInfo) -> i32 {
     // let now = Local::now().timestamp();
     let now = Local::now();
     let this_time = format!(
@@ -71,22 +72,51 @@ fn main() {
         now.minute(),
         now.second(),
     );
-    let code = "181710";
     let url = format!(
         "https://finance.naver.com/item/sise_time.nhn?thistime={}&code={}",
-        this_time, code
+        this_time, stock_info.code
     );
-
     println!("URL {}", url);
-    // match get_url(&url) {
-    //     Ok(s) => println!("{:?}", s),
-    //     Err(e) => println!("error: {:?} ", e),
-    // }
+    match get_url(&url) {
+        Ok(s) => match s.text() {
+            Ok(content) => output(&stock_info, &parse_stock_result(&content)),
+            Err(e) => println!("error {:?}", e),
+        },
+        Err(e) => println!("error: {:?} ", e),
+    }
+    100
 }
 
 fn get_url(url: &str) -> Result<reqwest::blocking::Response, Box<dyn std::error::Error>> {
     let resp = reqwest::blocking::get(url)?;
     Ok(resp)
+}
+
+fn output(stock_info: &StockInfo, price: &str) {
+    // let str1 = "red";
+    // println!(" {}", Red.paint(str1));
+    println!(
+        "종목명: {}",
+        Yellow.bold().paint(&stock_info.name).to_string()
+    );
+    // println!("bold {}", Cyan.bold().paint("bold style"));
+    println!(
+        "현재가: {}",
+        Style::new().on(Purple).fg(Black).underline().paint(price)
+    );
+    // println!("fixed {}", Fixed(127).paint("fixed test"));
+}
+
+fn parse_stock_result(resp_html: &str) -> String {
+    // println!("{}", resp_html)
+    let mut price = String::new();
+    let document = Document::from(resp_html);
+    for node in document.find(Class("num").child(Name("span"))) {
+        // println!("node {}", node.text());
+        price = node.text().clone();
+        break;
+    }
+    price
 }
 
 // fn load_stock_code_from_file(filename: String) -> Result<(), Box<dyn std::error::Error>> {
@@ -97,13 +127,13 @@ fn get_url(url: &str) -> Result<reqwest::blocking::Response, Box<dyn std::error:
 //     Ok(())
 // }
 
-fn load_stock_code_from_file(filename: String) {
+fn load_stock_code_from_file(filename: String) -> HashMap<String, StockInfo> {
     let f = File::open(filename);
     let mut f = match f {
         Ok(file) => file,
         Err(e) => {
             println!("error : {}", e);
-            return;
+            return HashMap::new();
         }
     };
     let mut contents = String::new();
@@ -111,7 +141,7 @@ fn load_stock_code_from_file(filename: String) {
         Ok(_) => (),
         Err(e) => {
             println!("error : {}", e);
-            return;
+            return HashMap::new();
         }
     }
     let document = Document::from(contents.as_str());
@@ -127,7 +157,7 @@ fn load_stock_code_from_file(filename: String) {
             0 => {
                 name = node.text().clone();
                 stock_info_map.insert(node.text().clone(), StockInfo::default());
-                stock_info_map.get_mut(&name).unwrap().name = node.text().clone();
+                stock_info_map.get_mut(&name).unwrap().name = node.text().to_uppercase().clone();
             }
             1 => stock_info_map.get_mut(&name).unwrap().code = node.text(),
             2 => stock_info_map.get_mut(&name).unwrap().bussiness_type = node.text(),
@@ -146,4 +176,6 @@ fn load_stock_code_from_file(filename: String) {
     // for (k, v) in stock_info_map {
     //     println!("{} {:#?}", k, v);
     // }
+
+    stock_info_map
 }

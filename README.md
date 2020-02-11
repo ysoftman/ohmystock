@@ -11,5 +11,10 @@
 ## build
 
 ```bash
+# 테스트
+cargo run 카카오
+
+# 빌드 및 실행
 cargo build
+target/debug/ohmystock 카카오
 ```
