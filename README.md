@@ -2,7 +2,7 @@
 
 터미널 환경에서 관심 주식 가격 모티터링
 
-## 주식 종목 데이터 다운로드
+## 주식 종목 데이터
 
 - 다운로드 <http://kind.krx.co.kr/corpgeneral/corpList.do?method=download>
 - 다운로드하면 '상장범인목록.xls' 파일이지만 내용은 html 이다.
@@ -11,8 +11,8 @@
 ## build and deploy
 
 ```bash
-# 테스트
-cargo run 카카오
+# 테스트(-f, --follow flag)
+cargo run -- -f 카카오
 
 # 빌드 및 실행
 cargo build
@@ -24,17 +24,7 @@ cargo login lF9CjSlaNpglPGJkPwFV8GnW6U0FJWxV
 
 # cargo 로 배포
 # --allow-dirty 로컬 변경 사항이 있는채로 배포 허용
-cargo publish --allow-dirty
+cargo publish
 ```
 
-## install and usage
-
-```bash
-# install
-cargo install ohmystock
-
-# usage
-ohmystock naver
-ohmystock 삼성전자
-ohmystock 카카오
-```
+## [install and usage](README_USAGE.md)

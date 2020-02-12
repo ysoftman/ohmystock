@@ -1,10 +1,12 @@
 [package]
 name = "ohmystock"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["ysoftman <ysoftman@gmail.com>"]
 edition = "2018"
 description = "show stock price"
 license = "MIT"
+readme = "README_USAGE.md"
+repository = "https://github.com/ysoftman/ohmystock"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -13,3 +15,4 @@ ansi_term = "0.12"
 reqwest = { version = "0.10", features = ["blocking", "json"] }
 select = "0.4"
 chrono = "0.4"
+structopt = "0.3"

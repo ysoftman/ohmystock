@@ -3,15 +3,16 @@ use ansi_term::Colour::Fixed;
 use ansi_term::Colour::*;
 use ansi_term::Style;
 use chrono::prelude::*;
-use chrono::{DateTime, Local, TimeZone, Utc};
+use chrono::Local;
 use select::document::Document;
-use select::predicate::{Attr, Class, Name, Predicate};
+use select::predicate::{Class, Name, Predicate};
 use std::collections::HashMap;
-use std::env;
-use std::fs::File;
-use std::io::prelude::*; // read_to_string()
+// use std::env;
+// use std::fs::File;
+// use std::io::prelude::*; // read_to_string()
 use std::thread;
-use std::time::{Duration, SystemTime};
+use std::time::Duration;
+use structopt::StructOpt;
 
 mod stock_list;
 
@@ -50,12 +51,29 @@ struct StockResult {
     compared_to_previous_day: String, // 전일대비 상승 또는 하락 변동값
 }
 
+#[derive(StructOpt, Debug)]
+#[structopt(name = "ohmystock")]
+struct Opt {
+    // -f 또는 --follow 지원
+    /// 1분 마다 갱신
+    #[structopt(short, long)]
+    follow: bool,
+
+    // - 가 없는 단순 인자
+    #[structopt(default_value = "카카오")]
+    target: String,
+}
+
 fn main() {
-    let mut target = String::from("카카오");
-    let args: Vec<String> = env::args().collect();
-    if args.len() > 1 {
-        target = args[1].to_uppercase().clone();
-    }
+    // let mut target = String::from("카카오");
+    // let args: Vec<String> = env::args().collect();
+    // if args.len() > 1 {
+    //     target = args[1].to_uppercase().clone();
+    // }
+    // println!("ags:{:?}", args);
+    let mut opt = Opt::from_args();
+    opt.target = opt.target.to_uppercase();
+    // println!("{:#?}", opt);
 
     // 파일로 부터 읽는 경우
     // let contents = load_stock_list_from_file(String::from("상장법인목록.xls"));
@@ -63,7 +81,7 @@ fn main() {
     // raw string 으로 부터 읽는 경우
     let stock_info_map = load_stock_list_from_raw_string(stock_list::STOCK_LIST.to_string());
 
-    match stock_info_map.get(&target) {
+    match stock_info_map.get(&opt.target) {
         Some(stock_info) => {
             println!("회사명: {}", stock_info.name);
             println!("종목코드: {}", stock_info.code);
@@ -74,33 +92,51 @@ fn main() {
             println!("대표자명: {}", stock_info.representative_name);
             println!("홈페이지: {}", stock_info.homepage);
             println!("지역: {}", stock_info.location);
-            get_stock_price(&stock_info);
         }
         None => (),
     }
+    if let Some(stock_info) = stock_info_map.get(&opt.target) {
+        let reference_url = make_reference_url(&stock_info);
+        println!("reference => {}", reference_url);
+        // -f , --follow 사용시
+        if opt.follow {
+            println!("enable follow mode...{}", opt.target);
+            loop {
+                get_stock_price(&reference_url, &stock_info);
+                thread::sleep(Duration::from_secs(60));
+            }
+        } else {
+            println!("just one time...");
+            get_stock_price(&reference_url, &stock_info);
+        }
+    }
+}
+fn local_now() -> DateTime<Local> {
+    // let now = Local::now().timestamp();
+    Local::now()
 }
 
-fn get_stock_price(stock_info: &StockInfo) {
-    // let now = Local::now().timestamp();
-    let now = Local::now();
+fn make_reference_url(stock_info: &StockInfo) -> String {
     let this_time = format!(
         "{:04}{:02}{:02}{:02}{:02}{:02}",
-        now.year(),
-        now.month(),
-        now.day(),
-        now.hour(),
-        now.minute(),
-        now.second(),
+        local_now().year(),
+        local_now().month(),
+        local_now().day(),
+        local_now().hour(),
+        local_now().minute(),
+        local_now().second(),
     );
-    let url = format!(
+    format!(
         "https://finance.naver.com/item/sise_time.nhn?thistime={}&code={}",
-        this_time, stock_info.code
-    );
-    println!("reference => {}", url);
+        this_time, &stock_info.code
+    )
+}
+
+fn get_stock_price(url: &String, stock_info: &StockInfo) {
     match get_url(&url) {
         Ok(s) => match s.text() {
             Ok(content) => output(
-                now.to_rfc3339_opts(SecondsFormat::Secs, false),
+                local_now().to_rfc3339_opts(SecondsFormat::Secs, false),
                 &stock_info,
                 &parse_stock_result(&content),
             ),
@@ -177,25 +213,25 @@ fn parse_stock_result(resp_html: &str) -> StockResult {
     sr
 }
 
-fn load_stock_list_from_file(filename: String) -> String {
-    let f = File::open(filename);
-    let mut f = match f {
-        Ok(file) => file,
-        Err(e) => {
-            println!("error : {}", e);
-            return String::new();
-        }
-    };
-    let mut contents = String::new();
-    match f.read_to_string(&mut contents) {
-        Ok(_) => (),
-        Err(e) => {
-            println!("error : {}", e);
-            return String::new();
-        }
-    }
-    contents
-}
+// fn load_stock_list_from_file(filename: String) -> String {
+//     let f = File::open(filename);
+//     let mut f = match f {
+//         Ok(file) => file,
+//         Err(e) => {
+//             println!("error : {}", e);
+//             return String::new();
+//         }
+//     };
+//     let mut contents = String::new();
+//     match f.read_to_string(&mut contents) {
+//         Ok(_) => (),
+//         Err(e) => {
+//             println!("error : {}", e);
+//             return String::new();
+//         }
+//     }
+//     contents
+// }
 
 fn load_stock_list_from_raw_string(contents: String) -> HashMap<String, StockInfo> {
     let document = Document::from(contents.as_str());
