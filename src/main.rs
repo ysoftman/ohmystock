@@ -13,6 +13,8 @@ use std::io::prelude::*; // read_to_string()
 use std::thread;
 use std::time::{Duration, SystemTime};
 
+mod stock_list;
+
 #[derive(Debug)]
 struct StockInfo {
     name: String,                // 회사명
@@ -53,9 +55,13 @@ fn main() {
     let args: Vec<String> = env::args().collect();
     if args.len() > 1 {
         target = args[1].to_uppercase().clone();
-        // println!("target:{}", target);
     }
-    let stock_info_map = load_stock_code_from_file(String::from("상장법인목록.xls"));
+
+    // 파일로 부터 읽는 경우
+    // let contents = load_stock_list_from_file(String::from("상장법인목록.xls"));
+    // let stock_info_map = load_stock_list_from_raw_string(contents);
+    // raw string 으로 부터 읽는 경우
+    let stock_info_map = load_stock_list_from_raw_string(stock_list::STOCK_LIST.to_string());
 
     match stock_info_map.get(&target) {
         Some(stock_info) => {
@@ -171,21 +177,13 @@ fn parse_stock_result(resp_html: &str) -> StockResult {
     sr
 }
 
-// fn load_stock_code_from_file(filename: String) -> Result<(), Box<dyn std::error::Error>> {
-//     let mut f = File::open(filename)?;
-//     let mut contents = String::new();
-//     f.read_to_string(&mut contents)?;
-//     println!("{}", contents)
-//     Ok(())
-// }
-
-fn load_stock_code_from_file(filename: String) -> HashMap<String, StockInfo> {
+fn load_stock_list_from_file(filename: String) -> String {
     let f = File::open(filename);
     let mut f = match f {
         Ok(file) => file,
         Err(e) => {
             println!("error : {}", e);
-            return HashMap::new();
+            return String::new();
         }
     };
     let mut contents = String::new();
@@ -193,9 +191,13 @@ fn load_stock_code_from_file(filename: String) -> HashMap<String, StockInfo> {
         Ok(_) => (),
         Err(e) => {
             println!("error : {}", e);
-            return HashMap::new();
+            return String::new();
         }
     }
+    contents
+}
+
+fn load_stock_list_from_raw_string(contents: String) -> HashMap<String, StockInfo> {
     let document = Document::from(contents.as_str());
 
     // for node in
