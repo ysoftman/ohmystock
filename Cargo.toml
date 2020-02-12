@@ -3,11 +3,13 @@ name = "ohmystock"
 version = "0.1.0"
 authors = ["ysoftman <ysoftman@gmail.com>"]
 edition = "2018"
+description = "show stock price"
+license = "MIT"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 ansi_term = "0.12"
 reqwest = { version = "0.10", features = ["blocking", "json"] }
-select = "*"
+select = "0.4"
 chrono = "0.4"

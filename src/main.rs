@@ -44,7 +44,8 @@ impl Default for StockInfo {
 
 struct StockResult {
     price: String,
-    up: bool,
+    up_down_same: String,
+    compared_to_previous_day: String, // 전일대비 상승 또는 하락 변동값
 }
 
 fn main() {
@@ -52,13 +53,21 @@ fn main() {
     let args: Vec<String> = env::args().collect();
     if args.len() > 1 {
         target = args[1].to_uppercase().clone();
-        println!("target:{}", target);
+        // println!("target:{}", target);
     }
     let stock_info_map = load_stock_code_from_file(String::from("상장법인목록.xls"));
 
     match stock_info_map.get(&target) {
         Some(stock_info) => {
-            println!("stock_info : {:?}", stock_info);
+            println!("회사명: {}", stock_info.name);
+            println!("종목코드: {}", stock_info.code);
+            println!("업종: {}", stock_info.bussiness_type);
+            println!("주요제품: {}", stock_info.product);
+            println!("상장일: {}", stock_info.listed_date);
+            println!("결산월: {}", stock_info.settlement_date);
+            println!("대표자명: {}", stock_info.representative_name);
+            println!("홈페이지: {}", stock_info.homepage);
+            println!("지역: {}", stock_info.location);
             get_stock_price(&stock_info);
         }
         None => (),
@@ -81,7 +90,7 @@ fn get_stock_price(stock_info: &StockInfo) {
         "https://finance.naver.com/item/sise_time.nhn?thistime={}&code={}",
         this_time, stock_info.code
     );
-    println!("URL {}", url);
+    println!("reference => {}", url);
     match get_url(&url) {
         Ok(s) => match s.text() {
             Ok(content) => output(
@@ -101,8 +110,8 @@ fn get_url(url: &str) -> Result<reqwest::blocking::Response, Box<dyn std::error:
 }
 
 fn output(timestring: String, stock_info: &StockInfo, sr: &StockResult) {
-    // let str1 = "red";
-    // println!(" {}", Red.paint(str1));
+    let up_down_and_compared_to_previous_day =
+        sr.up_down_same.clone() + &" ".to_string() + &sr.compared_to_previous_day;
     println!(
         "{}\t{}\t{}\t{}",
         timestring,
@@ -112,26 +121,52 @@ fn output(timestring: String, stock_info: &StockInfo, sr: &StockResult) {
             .fg(Black)
             .underline()
             .paint(&sr.price),
-        if sr.up {
-            Red.bold().paint("up").to_string()
+        if sr.up_down_same == "up" {
+            Red.bold()
+                .paint(&up_down_and_compared_to_previous_day)
+                .to_string()
+        } else if sr.up_down_same == "down" {
+            Blue.bold()
+                .paint(&up_down_and_compared_to_previous_day)
+                .to_string()
         } else {
-            Blue.bold().paint("down").to_string()
+            // 0~255 의 고정된 터미널 컬러 사요
+            Fixed(250)
+                .paint(&up_down_and_compared_to_previous_day)
+                .to_string()
         },
     );
-    // println!("fixed {}", Fixed(127).paint("fixed test"));
 }
 
 fn parse_stock_result(resp_html: &str) -> StockResult {
     // println!("{}", resp_html)
     let mut sr = StockResult {
         price: "".to_string(),
-        up: false,
+        up_down_same: "-".to_string(),
+        compared_to_previous_day: "".to_string(),
     };
     let document = Document::from(resp_html);
-    for node in document.find(Class("num").child(Name("span"))) {
+    let mut index = 1;
+    for node in document.find(Class("num").child(Name("span"))).take(2) {
         // println!("node {}", node.text());
-        sr.price = node.text().clone();
-        break;
+        match index {
+            1 => sr.price = node.text().trim().to_string(),
+            2 => {
+                sr.compared_to_previous_day = node.text().trim().to_string();
+                // 전일대비 값 변동이 있다면 up, down 파악
+                if sr.compared_to_previous_day != "0" {
+                    for img_node in document.find(Class("num").child(Name("img"))).take(1) {
+                        if img_node.attr("src").unwrap().to_string().contains("down") {
+                            sr.up_down_same = "down".to_string();
+                        } else {
+                            sr.up_down_same = "up".to_string();
+                        }
+                    }
+                }
+            }
+            _ => (),
+        }
+        index += 1;
     }
     sr
 }
