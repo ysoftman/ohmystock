@@ -42,6 +42,11 @@ impl Default for StockInfo {
     }
 }
 
+struct StockResult {
+    price: String,
+    up: bool,
+}
+
 fn main() {
     let mut target = String::from("카카오");
     let args: Vec<String> = env::args().collect();
@@ -60,7 +65,7 @@ fn main() {
     }
 }
 
-fn get_stock_price(stock_info: &StockInfo) -> i32 {
+fn get_stock_price(stock_info: &StockInfo) {
     // let now = Local::now().timestamp();
     let now = Local::now();
     let this_time = format!(
@@ -79,12 +84,15 @@ fn get_stock_price(stock_info: &StockInfo) -> i32 {
     println!("URL {}", url);
     match get_url(&url) {
         Ok(s) => match s.text() {
-            Ok(content) => output(&stock_info, &parse_stock_result(&content)),
+            Ok(content) => output(
+                now.to_rfc3339_opts(SecondsFormat::Secs, false),
+                &stock_info,
+                &parse_stock_result(&content),
+            ),
             Err(e) => println!("error {:?}", e),
         },
         Err(e) => println!("error: {:?} ", e),
     }
-    100
 }
 
 fn get_url(url: &str) -> Result<reqwest::blocking::Response, Box<dyn std::error::Error>> {
@@ -92,31 +100,40 @@ fn get_url(url: &str) -> Result<reqwest::blocking::Response, Box<dyn std::error:
     Ok(resp)
 }
 
-fn output(stock_info: &StockInfo, price: &str) {
+fn output(timestring: String, stock_info: &StockInfo, sr: &StockResult) {
     // let str1 = "red";
     // println!(" {}", Red.paint(str1));
     println!(
-        "종목명: {}",
-        Yellow.bold().paint(&stock_info.name).to_string()
-    );
-    // println!("bold {}", Cyan.bold().paint("bold style"));
-    println!(
-        "현재가: {}",
-        Style::new().on(Purple).fg(Black).underline().paint(price)
+        "{}\t{}\t{}\t{}",
+        timestring,
+        Yellow.bold().paint(&stock_info.name).to_string(),
+        Style::new()
+            .on(Purple)
+            .fg(Black)
+            .underline()
+            .paint(&sr.price),
+        if sr.up {
+            Red.bold().paint("up").to_string()
+        } else {
+            Blue.bold().paint("down").to_string()
+        },
     );
     // println!("fixed {}", Fixed(127).paint("fixed test"));
 }
 
-fn parse_stock_result(resp_html: &str) -> String {
+fn parse_stock_result(resp_html: &str) -> StockResult {
     // println!("{}", resp_html)
-    let mut price = String::new();
+    let mut sr = StockResult {
+        price: "".to_string(),
+        up: false,
+    };
     let document = Document::from(resp_html);
     for node in document.find(Class("num").child(Name("span"))) {
         // println!("node {}", node.text());
-        price = node.text().clone();
+        sr.price = node.text().clone();
         break;
     }
-    price
+    sr
 }
 
 // fn load_stock_code_from_file(filename: String) -> Result<(), Box<dyn std::error::Error>> {
