@@ -59,55 +59,72 @@ struct Opt {
     #[structopt(short, long)]
     follow: bool,
 
+    /// 회사 기본 정보
+    #[structopt(short, long)]
+    company_info: bool,
+
     // - 가 없는 단순 인자
     #[structopt(default_value = "카카오")]
-    target: String,
+    // target: String,
+    targets: Vec<String>,
 }
 
 fn main() {
-    // let mut target = String::from("카카오");
+    // let mut targets = String::from("카카오");
     // let args: Vec<String> = env::args().collect();
     // if args.len() > 1 {
-    //     target = args[1].to_uppercase().clone();
+    //     targets = args[1].to_uppercase().clone();
     // }
     // println!("ags:{:?}", args);
     let mut opt = Opt::from_args();
-    opt.target = opt.target.to_uppercase();
+    // opt.target = opt.targets.to_uppercase();
+    for v in &mut opt.targets {
+        *v = v.to_uppercase()
+    }
     // println!("{:#?}", opt);
 
-    // 파일로 부터 읽는 경우
+    // 파일로 부터 읽는 경우(파일이 바이너리와 항상 같은 위치에 있어야 하기 때문에 지양)
     // let contents = load_stock_list_from_file(String::from("상장법인목록.xls"));
     // let stock_info_map = load_stock_list_from_raw_string(contents);
     // raw string 으로 부터 읽는 경우
     let stock_info_map = load_stock_list_from_raw_string(stock_list::STOCK_LIST.to_string());
 
-    match stock_info_map.get(&opt.target) {
-        Some(stock_info) => {
-            println!("회사명: {}", stock_info.name);
-            println!("종목코드: {}", stock_info.code);
-            println!("업종: {}", stock_info.bussiness_type);
-            println!("주요제품: {}", stock_info.product);
-            println!("상장일: {}", stock_info.listed_date);
-            println!("결산월: {}", stock_info.settlement_date);
-            println!("대표자명: {}", stock_info.representative_name);
-            println!("홈페이지: {}", stock_info.homepage);
-            println!("지역: {}", stock_info.location);
+    // -f , --follow 사용시
+    if opt.follow {
+        println!("enable follow mode...");
+        loop {
+            show_stock_info(&opt, &stock_info_map);
+            thread::sleep(Duration::from_secs(60));
         }
-        None => (),
+    } else {
+        show_stock_info(&opt, &stock_info_map);
     }
-    if let Some(stock_info) = stock_info_map.get(&opt.target) {
-        let reference_url = make_reference_url(&stock_info);
-        println!("reference => {}", reference_url);
-        // -f , --follow 사용시
-        if opt.follow {
-            println!("enable follow mode...{}", opt.target);
-            loop {
+}
+
+fn show_stock_info(opt: &Opt, stock_info_map: &HashMap<String, StockInfo>) {
+    for v in &opt.targets {
+        // let reference_url: String;
+        // if let Some(stock_info) = stock_info_map.get(v) {
+        //     get_stock_price(&reference_url, &stock_info);
+        // }
+        match stock_info_map.get(v) {
+            Some(stock_info) => {
+                let reference_url = make_reference_url(&stock_info);
+                if opt.company_info {
+                    println!("회사명: {}", stock_info.name);
+                    println!("종목코드: {}", stock_info.code);
+                    println!("업종: {}", stock_info.bussiness_type);
+                    println!("주요제품: {}", stock_info.product);
+                    println!("상장일: {}", stock_info.listed_date);
+                    println!("결산월: {}", stock_info.settlement_date);
+                    println!("대표자명: {}", stock_info.representative_name);
+                    println!("홈페이지: {}", stock_info.homepage);
+                    println!("지역: {}", stock_info.location);
+                    println!("reference => {}", reference_url);
+                }
                 get_stock_price(&reference_url, &stock_info);
-                thread::sleep(Duration::from_secs(60));
             }
-        } else {
-            println!("just one time...");
-            get_stock_price(&reference_url, &stock_info);
+            None => (),
         }
     }
 }

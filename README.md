@@ -22,8 +22,8 @@ target/debug/ohmystock 카카오
 # https://crates.io/me 에서 토큰 생성
 cargo login lF9CjSlaNpglPGJkPwFV8GnW6U0FJWxV
 
-# cargo 로 배포
-# --allow-dirty 로컬 변경 사항이 있는채로 배포 허용
+# cargo.toml 버전업 수정 -> git 커밋 -> cargo 로 배포
+# --allow-dirty : git 커밋 없이 로컬 변경 사항이 있는채로 배포 허용
 cargo publish
 ```
 

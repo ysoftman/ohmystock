@@ -11,8 +11,12 @@ cargo uninstall ohmystock; cargo install ohmystock
 # help
 ohmystock -h
 
-# example
-ohmystock naver
+# 삼성전자 종목 보기
 ohmystock 삼성전자
+
+# 카카오 종목 1분마다 보기
 ohmystock 카카오 -f
+
+# 카카오 삼성전자 naver 종목 보기
+ohmystock 카카오 삼성전자 naver -f
 ```
