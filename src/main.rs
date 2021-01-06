@@ -169,10 +169,8 @@ fn get_url(url: &str) -> Result<reqwest::blocking::Response, Box<dyn std::error:
 }
 
 fn output(timestring: String, stock_info: &StockInfo, sr: &StockResult) {
-    let up_down_and_compared_to_previous_day =
-        sr.up_down_same.clone() + &" ".to_string() + &sr.compared_to_previous_day;
     println!(
-        "{}\t{}\t{}\t{}",
+        "{} {} {} {}",
         timestring,
         Yellow.bold().paint(&stock_info.name).to_string(),
         Style::new()
@@ -182,16 +180,16 @@ fn output(timestring: String, stock_info: &StockInfo, sr: &StockResult) {
             .paint(&sr.price),
         if sr.up_down_same == "up" {
             Red.bold()
-                .paint(&up_down_and_compared_to_previous_day)
+                .paint("▲ ".to_string() + &sr.compared_to_previous_day)
                 .to_string()
         } else if sr.up_down_same == "down" {
             Blue.bold()
-                .paint(&up_down_and_compared_to_previous_day)
+                .paint("▼ ".to_string() + &sr.compared_to_previous_day)
                 .to_string()
         } else {
-            // 0~255 의 고정된 터미널 컬러 사요
+            // 0~255 의 고정된 터미널 컬러 사용
             Fixed(250)
-                .paint(&up_down_and_compared_to_previous_day)
+                .paint(sr.up_down_same.clone() + &" ".to_string() + &sr.compared_to_previous_day)
                 .to_string()
         },
     );
