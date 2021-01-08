@@ -164,9 +164,24 @@ fn get_stock_price(url: &String, stock_info: &StockInfo) {
 }
 
 fn get_url(url: &str) -> Result<reqwest::blocking::Response, Box<dyn std::error::Error>> {
-    let resp = reqwest::blocking::get(url)?;
+    let client = reqwest::blocking::Client::new();
+    // user-agent mozilla 없으면 에러 페이지로 응답된다.
+    let resp = client
+        .get(url)
+        .header(reqwest::header::USER_AGENT, "mozilla")
+        .send()?;
     Ok(resp)
 }
+
+// async fn get_url(url: &str) -> Result<String, Box<dyn std::error::Error>> {
+//     let client = reqwest::Client::new();
+//     let resp = client
+//         .get(url)
+//         .header(reqwest::header::USER_AGENT, "mozilla")
+//         .send()
+//         .await?;
+//     Ok(resp)
+// }
 
 fn output(timestring: String, stock_info: &StockInfo, sr: &StockResult) {
     println!(
@@ -196,7 +211,7 @@ fn output(timestring: String, stock_info: &StockInfo, sr: &StockResult) {
 }
 
 fn parse_stock_result(resp_html: &str) -> StockResult {
-    // println!("{}", resp_html)
+    // println!("{}", resp_html);
     let mut sr = StockResult {
         price: "".to_string(),
         up_down_same: "-".to_string(),
