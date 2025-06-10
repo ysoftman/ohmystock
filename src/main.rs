@@ -20,7 +20,7 @@ mod stock_list;
 struct StockInfo {
     name: String,                // 회사명
     code: String,                // 종목코드
-    bussiness_type: String,      // 업종
+    business_type: String,       // 업종
     product: String,             // 주요제품
     listed_date: String,         // 상장일
     settlement_date: String,     // 결산월
@@ -34,7 +34,7 @@ impl Default for StockInfo {
         StockInfo {
             name: String::from(""),
             code: String::from(""),
-            bussiness_type: String::from(""),
+            business_type: String::from(""),
             product: String::from(""),
             listed_date: String::from(""),
             settlement_date: String::from(""),
@@ -75,7 +75,7 @@ fn main() {
     // if args.len() > 1 {
     //     targets = args[1].to_uppercase().clone();
     // }
-    // println!("ags:{:?}", args);
+    // println!("args:{:?}", args);
     let mut opt = Opt::from_args();
     // opt.target = opt.targets.to_uppercase();
     for v in &mut opt.targets {
@@ -113,7 +113,7 @@ fn show_stock_info(opt: &Opt, stock_info_map: &HashMap<String, StockInfo>) {
                 if opt.company_info {
                     println!("회사명: {}", stock_info.name);
                     println!("종목코드: {}", stock_info.code);
-                    println!("업종: {}", stock_info.bussiness_type);
+                    println!("업종: {}", stock_info.business_type);
                     println!("주요제품: {}", stock_info.product);
                     println!("상장일: {}", stock_info.listed_date);
                     println!("결산월: {}", stock_info.settlement_date);
@@ -280,7 +280,7 @@ fn load_stock_list_from_raw_string(contents: String) -> HashMap<String, StockInf
                 stock_info_map.get_mut(&name).unwrap().name = node.text().to_uppercase().clone();
             }
             1 => stock_info_map.get_mut(&name).unwrap().code = node.text(),
-            2 => stock_info_map.get_mut(&name).unwrap().bussiness_type = node.text(),
+            2 => stock_info_map.get_mut(&name).unwrap().business_type = node.text(),
             3 => stock_info_map.get_mut(&name).unwrap().product = node.text(),
             4 => stock_info_map.get_mut(&name).unwrap().listed_date = node.text(),
             5 => stock_info_map.get_mut(&name).unwrap().settlement_date = node.text(),
