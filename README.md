@@ -19,9 +19,10 @@ cargo run -- -f 카카오
 cargo build
 target/debug/ohmystock 카카오
 
-# cargo ohmystock 로그인
-# https://crates.io/me 에서 토큰 생성(토큰이 만료된 경우 다시 생성)
-cargo login cio75TLro7cxCGOwjvNmFu6NSBAnLR8troQ
+# cargo 로그인
+# https://crates.io/me 에서 토큰 생성함(보통 토큰 90일 지나 만료된 경우 다시 생성)
+# 로그인 하면 ~/.cargo/credentials.toml 에 토큰 저장됨
+cargo login
 
 # cargo.toml 버전업 수정 -> git 커밋 -> cargo 로 배포
 # --allow-dirty : git 커밋 없이 로컬 변경 사항이 있는채로 배포 허용
