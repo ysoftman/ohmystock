@@ -15,7 +15,7 @@ use std::thread;
 use std::time::Duration;
 mod stock_list;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 struct StockInfo {
     name: String,                // 회사명
     code: String,                // 종목코드
@@ -26,22 +26,6 @@ struct StockInfo {
     representative_name: String, // 대표자명
     homepage: String,            // 홈페이지
     location: String,            // 지역
-}
-
-impl Default for StockInfo {
-    fn default() -> StockInfo {
-        StockInfo {
-            name: String::from(""),
-            code: String::from(""),
-            business_type: String::from(""),
-            product: String::from(""),
-            listed_date: String::from(""),
-            settlement_date: String::from(""),
-            representative_name: String::from(""),
-            homepage: String::from(""),
-            location: String::from(""),
-        }
-    }
 }
 
 struct StockResult {
@@ -106,24 +90,21 @@ fn show_stock_info(opt: &Opt, stock_info_map: &HashMap<String, StockInfo>) {
         // if let Some(stock_info) = stock_info_map.get(v) {
         //     get_stock_price(&reference_url, &stock_info);
         // }
-        match stock_info_map.get(v) {
-            Some(stock_info) => {
-                let reference_url = make_reference_url(&stock_info);
-                if opt.company_info {
-                    println!("회사명: {}", stock_info.name);
-                    println!("종목코드: {}", stock_info.code);
-                    println!("업종: {}", stock_info.business_type);
-                    println!("주요제품: {}", stock_info.product);
-                    println!("상장일: {}", stock_info.listed_date);
-                    println!("결산월: {}", stock_info.settlement_date);
-                    println!("대표자명: {}", stock_info.representative_name);
-                    println!("홈페이지: {}", stock_info.homepage);
-                    println!("지역: {}", stock_info.location);
-                    println!("reference => {}", reference_url);
-                }
-                get_stock_price(&reference_url, &stock_info);
+        if let Some(stock_info) = stock_info_map.get(v) {
+            let reference_url = make_reference_url(stock_info);
+            if opt.company_info {
+                println!("회사명: {}", stock_info.name);
+                println!("종목코드: {}", stock_info.code);
+                println!("업종: {}", stock_info.business_type);
+                println!("주요제품: {}", stock_info.product);
+                println!("상장일: {}", stock_info.listed_date);
+                println!("결산월: {}", stock_info.settlement_date);
+                println!("대표자명: {}", stock_info.representative_name);
+                println!("홈페이지: {}", stock_info.homepage);
+                println!("지역: {}", stock_info.location);
+                println!("reference => {reference_url}");
             }
-            None => (),
+            get_stock_price(&reference_url, stock_info);
         }
     }
 }
@@ -148,17 +129,17 @@ fn make_reference_url(stock_info: &StockInfo) -> String {
     )
 }
 
-fn get_stock_price(url: &String, stock_info: &StockInfo) {
-    match get_url(&url) {
+fn get_stock_price(url: &str, stock_info: &StockInfo) {
+    match get_url(url) {
         Ok(s) => match s.text() {
             Ok(content) => output(
                 local_now().to_rfc3339_opts(SecondsFormat::Secs, false),
-                &stock_info,
+                stock_info,
                 &parse_stock_result(&content),
             ),
-            Err(e) => println!("error {:?}", e),
+            Err(e) => println!("error {e:?}"),
         },
-        Err(e) => println!("error: {:?} ", e),
+        Err(e) => println!("error: {e:?}"),
     }
 }
 
@@ -186,7 +167,7 @@ fn output(timestring: String, stock_info: &StockInfo, sr: &StockResult) {
     println!(
         "{} {} {} {}",
         timestring,
-        Yellow.bold().paint(&stock_info.name).to_string(),
+        Yellow.bold().paint(&stock_info.name),
         Style::new()
             .on(Purple)
             .fg(Black)
@@ -203,7 +184,7 @@ fn output(timestring: String, stock_info: &StockInfo, sr: &StockResult) {
         } else {
             // 0~255 의 고정된 터미널 컬러 사용
             Fixed(250)
-                .paint(sr.up_down_same.clone() + &" ".to_string() + &sr.compared_to_previous_day)
+                .paint(sr.up_down_same.clone() + " " + &sr.compared_to_previous_day)
                 .to_string()
         },
     );
@@ -267,12 +248,11 @@ fn load_stock_list_from_raw_string(contents: String) -> HashMap<String, StockInf
 
     // for node in
     //     document.find(Name("td").and(Attr("style", "mso-number-format:'@';text-align:center;")))
-    let mut cnt: u32 = 0;
     let mut name = String::new();
     let mut stock_info_map = HashMap::new();
-    for node in document.find(Name("td")) {
-        // println!("cnt {}, {}", cnt, node.text());
-        match cnt % 9 {
+    for (i, node) in (0_u32..).zip(document.find(Name("td"))) {
+        // println!("{}, {}", i, node.text());
+        match i % 9 {
             0 => {
                 name = node.text().clone();
                 stock_info_map.insert(node.text().clone(), StockInfo::default());
@@ -288,9 +268,8 @@ fn load_stock_list_from_raw_string(contents: String) -> HashMap<String, StockInf
             8 => stock_info_map.get_mut(&name).unwrap().location = node.text(),
             _ => (),
         }
-        cnt += 1;
     }
-    println!("");
+    println!();
 
     // for (k, v) in stock_info_map {
     //     println!("{} {:#?}", k, v);
