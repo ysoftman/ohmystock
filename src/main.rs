@@ -10,10 +10,9 @@ use std::collections::HashMap;
 // use std::env;
 // use std::fs::File;
 // use std::io::prelude::*; // read_to_string()
+use clap::Parser;
 use std::thread;
 use std::time::Duration;
-use structopt::StructOpt;
-
 mod stock_list;
 
 #[derive(Debug)]
@@ -51,20 +50,20 @@ struct StockResult {
     compared_to_previous_day: String, // 전일대비 상승 또는 하락 변동값
 }
 
-#[derive(StructOpt, Debug)]
-#[structopt(name = "ohmystock")]
+#[derive(Parser, Debug)]
+#[command(name = "ohmystock")]
 struct Opt {
     // -f 또는 --follow 지원
     /// 1분 마다 갱신
-    #[structopt(short, long)]
+    #[arg(short, long)]
     follow: bool,
 
     /// 회사 기본 정보
-    #[structopt(short, long)]
+    #[arg(short, long)]
     company_info: bool,
 
     // - 가 없는 단순 인자
-    #[structopt(default_value = "카카오")]
+    #[arg(default_value = "카카오")]
     // target: String,
     targets: Vec<String>,
 }
@@ -76,7 +75,7 @@ fn main() {
     //     targets = args[1].to_uppercase().clone();
     // }
     // println!("args:{:?}", args);
-    let mut opt = Opt::from_args();
+    let mut opt = Opt::parse();
     // opt.target = opt.targets.to_uppercase();
     for v in &mut opt.targets {
         *v = v.to_uppercase()
