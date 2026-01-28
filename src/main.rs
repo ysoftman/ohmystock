@@ -36,6 +36,7 @@ struct StockResult {
 
 #[derive(Parser, Debug)]
 #[command(name = "ohmystock")]
+#[command(version)] // clap 라이브러리에서 처리, Cargo.toml > version 사용 -V, --version Print version
 struct Opt {
     // -f 또는 --follow 지원
     /// 1분 마다 갱신
