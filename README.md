@@ -20,7 +20,7 @@ cargo build
 target/debug/ohmystock 카카오
 
 # cargo 로그인
-# https://crates.io/me 에서 토큰 생성함(보통 토큰 90일 지나 만료된 경우 다시 생성)
+# https://crates.io/me 에서 토큰 생성함
 # 로그인 하면 ~/.cargo/credentials.toml 에 토큰 저장됨
 cargo login
 

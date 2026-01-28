@@ -5,7 +5,7 @@ use ansi_term::Style;
 use chrono::prelude::*;
 use chrono::Local;
 use select::document::Document;
-use select::predicate::{Class, Name, Predicate};
+use select::predicate::{Class, Name};
 use std::collections::HashMap;
 // use std::env;
 // use std::fs::File;
@@ -169,7 +169,7 @@ fn output(timestring: String, stock_info: &StockInfo, sr: &StockResult) {
         timestring,
         Yellow.bold().paint(&stock_info.name),
         Style::new()
-            .on(Purple)
+            .on(White)
             .fg(Black)
             .underline()
             .paint(&sr.price),
@@ -191,7 +191,6 @@ fn output(timestring: String, stock_info: &StockInfo, sr: &StockResult) {
 }
 
 fn parse_stock_result(resp_html: &str) -> StockResult {
-    // println!("{}", resp_html);
     let mut sr = StockResult {
         price: "".to_string(),
         up_down_same: "-".to_string(),
@@ -199,19 +198,29 @@ fn parse_stock_result(resp_html: &str) -> StockResult {
     };
     let document = Document::from(resp_html);
     let mut index = 1;
-    for node in document.find(Class("num").child(Name("span"))).take(2) {
-        // println!("node {}", node.text());
+    for ele in document.find(Class("num")).take(2) {
         match index {
-            1 => sr.price = node.text().trim().to_string(),
+            1 => {
+                if let Some(span) = ele.find(Name("span")).next() {
+                    sr.price = span.text().trim().to_string();
+                }
+            }
             2 => {
-                sr.compared_to_previous_day = node.text().trim().to_string();
+                if let Some(span) = ele.find(Name("span")).nth(1) {
+                    sr.compared_to_previous_day = span.text().trim().to_string();
+                }
                 // 전일대비 값 변동이 있다면 up, down 파악
                 if sr.compared_to_previous_day != "0" {
-                    for img_node in document.find(Class("num").child(Name("img"))).take(1) {
-                        if img_node.attr("src").unwrap().to_string().contains("down") {
-                            sr.up_down_same = "down".to_string();
-                        } else {
+                    for up_down_ele in ele.find(Name("em")).take(1) {
+                        if up_down_ele
+                            .attr("class")
+                            .unwrap()
+                            .to_string()
+                            .contains("bu_pup")
+                        {
                             sr.up_down_same = "up".to_string();
+                        } else {
+                            sr.up_down_same = "down".to_string();
                         }
                     }
                 }
