@@ -6,7 +6,7 @@ edition = "2021"
 rust-version = "1.85"
 description = "show stock price"
 license = "MIT"
-readme = "README_USAGE.md"
+readme = "README.md"
 repository = "https://github.com/ysoftman/ohmystock"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
