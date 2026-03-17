@@ -262,20 +262,21 @@ fn load_stock_list_from_raw_string(contents: String) -> HashMap<String, StockInf
     let mut stock_info_map = HashMap::new();
     for (i, node) in (0_u32..).zip(document.find(Name("td"))) {
         // println!("{}, {}", i, node.text());
-        match i % 9 {
+        match i % 10 {
             0 => {
                 name = node.text().clone();
                 stock_info_map.insert(node.text().clone(), StockInfo::default());
                 stock_info_map.get_mut(&name).unwrap().name = node.text().to_uppercase().clone();
             }
-            1 => stock_info_map.get_mut(&name).unwrap().code = node.text(),
-            2 => stock_info_map.get_mut(&name).unwrap().business_type = node.text(),
-            3 => stock_info_map.get_mut(&name).unwrap().product = node.text(),
-            4 => stock_info_map.get_mut(&name).unwrap().listed_date = node.text(),
-            5 => stock_info_map.get_mut(&name).unwrap().settlement_date = node.text(),
-            6 => stock_info_map.get_mut(&name).unwrap().representative_name = node.text(),
-            7 => stock_info_map.get_mut(&name).unwrap().homepage = node.text().trim().to_string(),
-            8 => stock_info_map.get_mut(&name).unwrap().location = node.text(),
+            1 => {} // 시장구분 (skip)
+            2 => stock_info_map.get_mut(&name).unwrap().code = node.text(),
+            3 => stock_info_map.get_mut(&name).unwrap().business_type = node.text(),
+            4 => stock_info_map.get_mut(&name).unwrap().product = node.text(),
+            5 => stock_info_map.get_mut(&name).unwrap().listed_date = node.text(),
+            6 => stock_info_map.get_mut(&name).unwrap().settlement_date = node.text(),
+            7 => stock_info_map.get_mut(&name).unwrap().representative_name = node.text(),
+            8 => stock_info_map.get_mut(&name).unwrap().homepage = node.text().trim().to_string(),
+            9 => stock_info_map.get_mut(&name).unwrap().location = node.text(),
             _ => (),
         }
     }
