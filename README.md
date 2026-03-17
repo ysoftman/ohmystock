@@ -2,12 +2,27 @@
 
 터미널에서 관심 주식 가격 모니터링
 
-## 주식 종목 데이터
+## install and usage
 
-- 다운로드 <http://kind.krx.co.kr/corpgeneral/corpList.do?method=download>
-- 다운로드하면 '상장범인목록.xls' 파일이지만 내용은 html 이다.
-- euc-kr 인코딩이라 utf8 로 변경해서 저장한다.
-- html내용으로 stock_list.rs 에 업데이트한다.
+```bash
+# install
+cargo uninstall ohmystock; cargo install ohmystock
+
+# help
+ohmystock -h
+
+# 삼성전자 종목 현재 값 보기
+ohmystock 삼성전자
+
+# 삼성전자 회사 정보/주식참조URL 보기
+ohmystock 삼성전자 -c
+
+# 카카오 종목 1분마다 보기
+ohmystock 카카오 -f
+
+# 카카오 삼성전자 naver 종목 보기
+ohmystock 카카오 삼성전자 naver -f
+```
 
 ## build and deploy
 
@@ -29,4 +44,9 @@ cargo login
 cargo publish
 ```
 
-## [install and usage](README_USAGE.md)
+## 주식 종목 데이터 업데이트시
+
+- 다운로드 <http://kind.krx.co.kr/corpgeneral/corpList.do?method=download>
+- 다운로드하면 '상장범인목록.xls' 파일이지만 내용은 html 이다.
+- euc-kr 인코딩이라 utf8 로 변경해서 저장한다.
+- html내용으로 stock_list.rs 에 업데이트한다.
