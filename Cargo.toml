@@ -1,8 +1,9 @@
 [package]
 name = "ohmystock"
-version = "0.1.8"
+version = "0.1.9"
 authors = ["ysoftman <ysoftman@gmail.com>"]
-edition = "2018"
+edition = "2021"
+rust-version = "1.85"
 description = "show stock price"
 license = "MIT"
 readme = "README_USAGE.md"

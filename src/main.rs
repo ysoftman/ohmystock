@@ -1,4 +1,3 @@
-extern crate chrono;
 use ansi_term::Colour::Fixed;
 use ansi_term::Colour::*;
 use ansi_term::Style;
