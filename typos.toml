@@ -15,4 +15,4 @@ extend-ignore-re = [
 
 # typos 검사 제외파일
 [files]
-extend-exclude = ["Cargo.toml", "*.lock", "src/stock_list.rs"]
+extend-exclude = ["Cargo.toml", "*.lock", "data/*.html"]
