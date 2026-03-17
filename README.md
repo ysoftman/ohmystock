@@ -46,7 +46,7 @@ cargo publish
 
 ## 주식 종목 데이터 업데이트시
 
-- 다운로드 <http://kind.krx.co.kr/corpgeneral/corpList.do?method=download>
-- 다운로드하면 '상장법인목록.xls' 파일이지만 내용은 html 이다.
-- euc-kr 인코딩이라 utf8 로 변경해서 저장한다.
-- html내용으로 stock_list.rs 에 업데이트한다.
+```bash
+# KRX에서 상장법인목록 다운로드 후 UTF-8 변환하여 data/stock_list.html 에 저장
+./update_stock_list.sh
+```
