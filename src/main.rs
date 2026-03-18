@@ -10,6 +10,8 @@ use std::collections::HashMap;
 // use std::fs::File;
 // use std::io::prelude::*; // read_to_string()
 use clap::Parser;
+use fuzzy_matcher::skim::SkimMatcherV2;
+use fuzzy_matcher::FuzzyMatcher;
 use std::thread;
 use std::time::Duration;
 mod stock_list;
@@ -94,13 +96,30 @@ fn main() {
     }
 }
 
+fn find_stock<'a>(
+    stock_info_map: &'a HashMap<String, StockInfo>,
+    keyword: &str,
+) -> Option<&'a StockInfo> {
+    // 정확히 일치하면 바로 반환
+    if let Some(info) = stock_info_map.get(keyword) {
+        return Some(info);
+    }
+    // fuzzy matching으로 가장 점수 높은 종목 반환
+    let matcher = SkimMatcherV2::default();
+    stock_info_map
+        .values()
+        .filter_map(|info| {
+            matcher
+                .fuzzy_match(&info.name, keyword)
+                .map(|score| (info, score))
+        })
+        .max_by_key(|(_, score)| *score)
+        .map(|(info, _)| info)
+}
+
 fn show_stock_info(opt: &Opt, stock_info_map: &HashMap<String, StockInfo>) {
     for v in &opt.targets {
-        // let reference_url: String;
-        // if let Some(stock_info) = stock_info_map.get(v) {
-        //     get_stock_price(&reference_url, &stock_info);
-        // }
-        if let Some(stock_info) = stock_info_map.get(v) {
+        if let Some(stock_info) = find_stock(stock_info_map, v) {
             let reference_url = make_reference_url(stock_info);
             if opt.company_info {
                 println!("회사명: {}", stock_info.name);
@@ -264,16 +283,21 @@ fn parse_stock_result(resp_html: &str) -> StockResult {
 
 fn search_stock_list(stock_info_map: &HashMap<String, StockInfo>, keyword: &str) {
     let keyword_upper = keyword.to_uppercase();
-    let mut results: Vec<&StockInfo> = stock_info_map
+    let matcher = SkimMatcherV2::default();
+    let mut results: Vec<(&StockInfo, i64)> = stock_info_map
         .values()
-        .filter(|info| {
-            keyword_upper.is_empty()
-                || info.name.contains(&keyword_upper)
-                || info.code.contains(&keyword_upper)
-                || info.business_type.contains(&keyword_upper)
+        .filter_map(|info| {
+            if keyword_upper.is_empty() {
+                return Some((info, 0));
+            }
+            let score = [&info.name, &info.code, &info.business_type]
+                .iter()
+                .filter_map(|field| matcher.fuzzy_match(field, &keyword_upper))
+                .max();
+            score.map(|s| (info, s))
         })
         .collect();
-    results.sort_by(|a, b| a.name.cmp(&b.name));
+    results.sort_by(|a, b| b.1.cmp(&a.1).then(a.0.name.cmp(&b.0.name)));
 
     if results.is_empty() {
         println!("\"{keyword}\" 에 해당하는 종목이 없습니다.");
@@ -287,7 +311,7 @@ fn search_stock_list(stock_info_map: &HashMap<String, StockInfo>, keyword: &str)
         Fixed(250).paint("업종")
     );
     println!("{}", "-".repeat(60));
-    for info in &results {
+    for (info, _) in &results {
         println!(
             "{:<20} {:<10} {}",
             Yellow.paint(&info.name),

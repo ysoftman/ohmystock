@@ -17,3 +17,4 @@ reqwest = { version = "0.13", features = ["blocking", "json"] }
 select = "0.6"
 chrono = "0.4"
 clap = { version = "4", features = ["derive"] }
+fuzzy-matcher = "0.3"

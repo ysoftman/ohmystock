@@ -14,11 +14,14 @@ ohmystock -h
 # 전체 종목 목록 보기
 ohmystock -l
 
-# 키워드로 종목 검색 (종목명, 종목코드, 업종)
-ohmystock -l 전자
+# 키워드로 종목 검색 (fuzzy matching 지원)
+ohmystock -l 삼전 # 삼성전자 and 삼성전기 ...
+ohmystock -l 카오 # 카카오 and 카카오페이 ...
 
-# 삼성전자 종목 현재 값 보기
+# 종목 현재 값 보기 (fuzzy matching 지원, 매칭점수 높은것 1개만)
 ohmystock 삼성전자
+ohmystock 삼전 # 삼성전자 or 삼성전기 ...
+ohmystock 카오 # 카카오 or 카카오페이 ...
 
 # 삼성전자 회사 정보/주식참조URL 보기
 ohmystock 삼성전자 -c
