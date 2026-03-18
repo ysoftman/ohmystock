@@ -169,9 +169,9 @@ fn output(timestring: String, stock_info: &StockInfo, sr: &StockResult) {
         timestring,
         Yellow.bold().paint(&stock_info.name),
         Style::new()
-            .on(White)
-            .fg(Black)
-            .underline()
+            .on(RGB(30, 30, 60))
+            .fg(RGB(0, 230, 180))
+            .bold()
             .paint(&sr.price),
         if sr.up_down_same == "up" {
             Red.bold()
