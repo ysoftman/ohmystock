@@ -46,6 +46,10 @@ struct Opt {
     #[arg(short, long)]
     company_info: bool,
 
+    /// 종목명 검색 (키워드 없으면 전체 목록 출력)
+    #[arg(short, long, num_args = 0..=1, default_missing_value = "")]
+    list: Option<String>,
+
     // - 가 없는 단순 인자
     #[arg(default_value = "카카오")]
     // target: String,
@@ -71,6 +75,12 @@ fn main() {
     // let stock_info_map = load_stock_list_from_raw_string(contents);
     // raw string 으로 부터 읽는 경우
     let stock_info_map = load_stock_list_from_raw_string(stock_list::STOCK_LIST.to_string());
+
+    // -l, --list 사용시 종목 검색
+    if let Some(keyword) = &opt.list {
+        search_stock_list(&stock_info_map, keyword);
+        return;
+    }
 
     // -f , --follow 사용시
     if opt.follow {
@@ -251,6 +261,42 @@ fn parse_stock_result(resp_html: &str) -> StockResult {
 //     }
 //     contents
 // }
+
+fn search_stock_list(stock_info_map: &HashMap<String, StockInfo>, keyword: &str) {
+    let keyword_upper = keyword.to_uppercase();
+    let mut results: Vec<&StockInfo> = stock_info_map
+        .values()
+        .filter(|info| {
+            keyword_upper.is_empty()
+                || info.name.contains(&keyword_upper)
+                || info.code.contains(&keyword_upper)
+                || info.business_type.contains(&keyword_upper)
+        })
+        .collect();
+    results.sort_by(|a, b| a.name.cmp(&b.name));
+
+    if results.is_empty() {
+        println!("\"{keyword}\" 에 해당하는 종목이 없습니다.");
+        return;
+    }
+
+    println!(
+        "{:<20} {:<10} {}",
+        Yellow.bold().paint("종목명"),
+        Green.bold().paint("종목코드"),
+        Fixed(250).paint("업종")
+    );
+    println!("{}", "-".repeat(60));
+    for info in &results {
+        println!(
+            "{:<20} {:<10} {}",
+            Yellow.paint(&info.name),
+            Green.paint(&info.code),
+            Fixed(250).paint(&info.business_type)
+        );
+    }
+    println!("\n총 {}개 종목", results.len());
+}
 
 fn load_stock_list_from_raw_string(contents: String) -> HashMap<String, StockInfo> {
     let document = Document::from(contents.as_str());

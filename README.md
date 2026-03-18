@@ -11,6 +11,12 @@ cargo uninstall ohmystock; cargo install ohmystock
 # help
 ohmystock -h
 
+# 전체 종목 목록 보기
+ohmystock -l
+
+# 키워드로 종목 검색 (종목명, 종목코드, 업종)
+ohmystock -l 전자
+
 # 삼성전자 종목 현재 값 보기
 ohmystock 삼성전자
 
