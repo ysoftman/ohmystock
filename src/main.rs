@@ -1,8 +1,6 @@
-use ansi_term::Colour::Fixed;
-use ansi_term::Colour::*;
-use ansi_term::Style;
 use chrono::prelude::*;
 use chrono::Local;
+use colored::*;
 use select::document::Document;
 use select::predicate::{Class, Name};
 use std::collections::HashMap;
@@ -196,24 +194,25 @@ fn output(timestring: String, stock_info: &StockInfo, sr: &StockResult) {
     println!(
         "{} {} {} {}",
         timestring,
-        Yellow.bold().paint(&stock_info.name),
-        Style::new()
-            .on(RGB(30, 30, 60))
-            .fg(RGB(0, 230, 180))
-            .bold()
-            .paint(&sr.price),
+        stock_info.name.yellow().bold(),
+        sr.price
+            .on_truecolor(30, 30, 60)
+            .truecolor(0, 230, 180)
+            .bold(),
         if sr.up_down_same == "up" {
-            Red.bold()
-                .paint("▲ ".to_string() + &sr.compared_to_previous_day)
+            format!("▲ {}", &sr.compared_to_previous_day)
+                .red()
+                .bold()
                 .to_string()
         } else if sr.up_down_same == "down" {
-            Blue.bold()
-                .paint("▼ ".to_string() + &sr.compared_to_previous_day)
+            format!("▼ {}", &sr.compared_to_previous_day)
+                .blue()
+                .bold()
                 .to_string()
         } else {
             // 0~255 의 고정된 터미널 컬러 사용
-            Fixed(250)
-                .paint(sr.up_down_same.clone() + " " + &sr.compared_to_previous_day)
+            format!("{} {}", &sr.up_down_same, &sr.compared_to_previous_day)
+                .truecolor(188, 188, 188)
                 .to_string()
         },
     );
@@ -306,17 +305,17 @@ fn search_stock_list(stock_info_map: &HashMap<String, StockInfo>, keyword: &str)
 
     println!(
         "{:<20} {:<10} {}",
-        Yellow.bold().paint("종목명"),
-        Green.bold().paint("종목코드"),
-        Fixed(250).paint("업종")
+        "종목명".yellow().bold(),
+        "종목코드".green().bold(),
+        "업종".truecolor(188, 188, 188)
     );
     println!("{}", "-".repeat(60));
     for (info, _) in &results {
         println!(
             "{:<20} {:<10} {}",
-            Yellow.paint(&info.name),
-            Green.paint(&info.code),
-            Fixed(250).paint(&info.business_type)
+            info.name.yellow(),
+            info.code.green(),
+            info.business_type.truecolor(188, 188, 188)
         );
     }
     println!("\n총 {}개 종목", results.len());

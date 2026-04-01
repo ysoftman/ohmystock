@@ -12,7 +12,7 @@ repository = "https://github.com/ysoftman/ohmystock"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-ansi_term = "0.12"
+colored = "3"
 reqwest = { version = "0.13", features = ["blocking", "json"] }
 select = "0.6"
 chrono = "0.4"
