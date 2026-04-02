@@ -11,7 +11,11 @@ echo "downloading stock list from KRX..."
 curl -sL -d "" "http://kind.krx.co.kr/corpgeneral/corpList.do?method=download" -o "${TMP_FILE}"
 
 echo "converting EUC-KR to UTF-8..."
-iconv -f EUC-KR -t UTF-8 "${TMP_FILE}" >"${OUTPUT}"
+iconv -f EUC-KR -t UTF-8 "${TMP_FILE}" | sed 's/charset=euc-kr/charset=utf-8/g' >"${OUTPUT}"
 
 rm -f "${TMP_FILE}"
+
+echo "formatting with prettier..."
+bunx prettier --write "${OUTPUT}"
+
 echo "saved to ${OUTPUT}"
