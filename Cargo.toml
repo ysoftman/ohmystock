@@ -1,6 +1,6 @@
 [package]
 name = "ohmystock"
-version = "0.1.12"
+version = "0.1.13"
 authors = ["ysoftman <ysoftman@gmail.com>"]
 edition = "2021"
 rust-version = "1.85"
