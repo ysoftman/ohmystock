@@ -14,7 +14,7 @@ repository = "https://github.com/ysoftman/ohmystock"
 [dependencies]
 colored = "3"
 reqwest = { version = "0.13", features = ["blocking", "json"] }
-select = "0.6"
+scraper = "0.26"
 chrono = "0.4"
 clap = { version = "4", features = ["derive"] }
 fuzzy-matcher = "0.3"

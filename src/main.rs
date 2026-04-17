@@ -1,8 +1,7 @@
 use chrono::prelude::*;
 use chrono::Local;
 use colored::*;
-use select::document::Document;
-use select::predicate::{Class, Name};
+use scraper::{Html, Selector};
 use std::collections::HashMap;
 // use std::env;
 // use std::fs::File;
@@ -224,23 +223,28 @@ fn parse_stock_result(resp_html: &str) -> StockResult {
         up_down_same: "-".to_string(),
         compared_to_previous_day: "".to_string(),
     };
-    let document = Document::from(resp_html);
+    let document = Html::parse_document(resp_html);
+    let num_selector = Selector::parse(".num").unwrap();
+    let span_selector = Selector::parse("span").unwrap();
+    let em_selector = Selector::parse("em").unwrap();
     let mut index = 1;
-    for ele in document.find(Class("num")).take(2) {
+    for ele in document.select(&num_selector).take(2) {
         match index {
             1 => {
-                if let Some(span) = ele.find(Name("span")).next() {
-                    sr.price = span.text().trim().to_string();
+                if let Some(span) = ele.select(&span_selector).next() {
+                    sr.price = span.text().collect::<String>().trim().to_string();
                 }
             }
             2 => {
-                if let Some(span) = ele.find(Name("span")).nth(1) {
-                    sr.compared_to_previous_day = span.text().trim().to_string();
+                if let Some(span) = ele.select(&span_selector).nth(1) {
+                    sr.compared_to_previous_day =
+                        span.text().collect::<String>().trim().to_string();
                 }
                 // 전일대비 값 변동이 있다면 up, down 파악
                 if sr.compared_to_previous_day != "0" {
-                    for up_down_ele in ele.find(Name("em")).take(1) {
+                    for up_down_ele in ele.select(&em_selector).take(1) {
                         if up_down_ele
+                            .value()
                             .attr("class")
                             .unwrap()
                             .to_string()
@@ -322,15 +326,13 @@ fn search_stock_list(stock_info_map: &HashMap<String, StockInfo>, keyword: &str)
 }
 
 fn load_stock_list_from_raw_string(contents: String) -> HashMap<String, StockInfo> {
-    let document = Document::from(contents.as_str());
+    let document = Html::parse_document(contents.as_str());
+    let td_selector = Selector::parse("td").unwrap();
 
-    // for node in
-    //     document.find(Name("td").and(Attr("style", "mso-number-format:'@';text-align:center;")))
     let mut name = String::new();
     let mut stock_info_map = HashMap::new();
-    for (i, node) in (0_u32..).zip(document.find(Name("td"))) {
-        // println!("{}, {}", i, node.text());
-        let text = node.text().trim().to_string();
+    for (i, node) in (0_u32..).zip(document.select(&td_selector)) {
+        let text = node.text().collect::<String>().trim().to_string();
         match i % 10 {
             0 => {
                 name = text.clone();
