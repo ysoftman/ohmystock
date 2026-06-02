@@ -43,6 +43,13 @@ cargo run -- -f 카카오
 cargo build
 target/debug/ohmystock 카카오
 
+# 패키지 업그레이드
+# upgrade(https://github.com/killercup/cargo-edit)사용시 cargo.toml 비호환(-i, --incompatible), cargo.lock 패키지 버전업
+cargo upgrade -i
+
+# cargo.toml 은 건드리지 않고 cargo.lock 만 버전업
+cargo update
+
 # cargo 로그인
 # https://crates.io/me 에서 토큰 생성함
 # 로그인 하면 ~/.cargo/credentials.toml 에 토큰 저장됨
